@@ -4,7 +4,7 @@ import requests
 import base64
 
 
-def split_wav_and_transcribe(wav_file, chunk_duration_ms=30000):
+def split_wav_and_transcribe(wav_file, chunk_duration_ms=100000):
     audio = AudioSegment.from_wav(wav_file)
     total_duration_ms = len(audio)
     chunk_start = 0
@@ -30,7 +30,7 @@ def split_wav_and_transcribe(wav_file, chunk_duration_ms=30000):
 
 
 def transcribe_audio(wav_buffer):
-    URL = "http://127.0.0.1:8000/asr"
+    URL = "http://127.0.0.1:8000/vad"
     data = {"data": base64.b64encode(wav_buffer.read()).decode("utf-8")}
     response = requests.post(URL, json=data)
     return response
