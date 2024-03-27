@@ -6,79 +6,60 @@ from queue import Empty
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from faster_whisper import WhisperModel
+from buffer_management import BufferManager
 from ray import serve
+from services import process_asr
+from uuid import uuid4
 
 logger = logging.getLogger("ray.serve")
 
 fastapi_app = FastAPI()
 
 
-@serve.deployment(
-    num_replicas=2, ray_actor_options={"num_cpus": 2, "num_gpus": 0}
-)
+@serve.deployment(num_replicas=1, ray_actor_options={"num_cpus": 2, "num_gpus": 0})
 @serve.ingress(fastapi_app)
-class ASRSocketServer:
+class ASRServer:
     def __init__(self):
-        self.clients = {}
         # Load model
-        # self.model = pipeline("translation_en_to_fr", model="t5-small")
-        self.loop = asyncio.get_running_loop()
-        self.pipeline = WhisperModel("distil-large-v2", compute_type="int8")
+        self.buffer = {}
 
-    def generate_transcribe(self, data, stream_chunks=[]):
-        wav_buffer = io.BytesIO()
-
-        with wave.open(
-            wav_buffer, "wb"
-        ) as wav_file:  # Note the 'wb' mode for BytesIO
-            # Set the parameters as before
-            wav_file.setnchannels(1)  # Mono audio
-            wav_file.setsampwidth(2)  # Assuming 16-bit audio
-            wav_file.setframerate(16000)
-
-            # Write the frames
-            wav_file.writeframes(data)
-        # audio_data.write(wav_buffer, format="wav")
-        wav_buffer.seek(0)
-        segments, info = self.pipeline.transcribe(
-            wav_buffer, "en", beam_size=1
-        )
-
-        stream_chunks[:] = [segments]
-
-    async def consume_streamer(self, streamer):
-        while True:
-            try:
-                for segment in streamer:
-                    logger.info(f'Yielding token: "{segment.text}"')
-                    yield segment.text
-                break
-            except Empty:
-                await asyncio.sleep(0.001)
-
-    @fastapi_app.websocket("/")
-    async def handle_request(self, ws: WebSocket) -> None:
+    @fastapi_app.websocket("/{client_id}")
+    async def handle_request(self, ws: WebSocket, client_id) -> None:
         await ws.accept()
+        
+        if client_id not in self.buffer:
+            self.buffer[client_id] = BufferManager()
 
-        conversation = ""
         try:
             while True:
+                # client_id = await ws.receive_text()
+                # if client_id not in self.buffer:
+                #     self.buffer[client_id] = BufferManager()
+                
                 data = await ws.receive_bytes()
-                streamer = []
-
-                await self.loop.run_in_executor(
-                    None, self.generate_transcribe, data, streamer
+                
+                meta = dict(
+                    channels=1,
+                    sampwidth=2,
+                    framerate=16000,
                 )
-                response = ""
 
-                print("Transcribe Done")
-                async for text in self.consume_streamer(streamer[0]):
+                asr_chunk = await self.buffer[client_id].add_chunk(data, meta)
+                
+                print(len(self.buffer[client_id].buffer))
+                
+                if asr_chunk:
+                    print("ASR CHUNK")
+                    print(len(asr_chunk))
+                    text = await process_asr(asr_chunk, meta)
+                    
+                    print(text)
                     await ws.send_text(text)
-                    response += text
-                await ws.send_text("<<Response Finished>>")
-                conversation += response
+                else:
+                    await ws.send_text(" ")
         except WebSocketDisconnect:
             print("Client disconnected.")
+            # self.buffer.pop(client_id)
 
 
-faster_whisper_app = ASRSocketServer.bind()
+asr_app = ASRServer.bind()

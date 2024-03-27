@@ -29,7 +29,7 @@ def convert_bytes_to_io(bytes_data, channels=1, sampwidth=2, framerate=48000):
     return wav_buffer
 
 
-def process_vad(bytes_data, chunk_meta):
+async def process_vad(bytes_data, chunk_meta):
     bytes_data = convert_bytes_to_io(bytes_data, **chunk_meta)
     URL = RAY_PROXY_URL + "vad"
     data = {
@@ -40,7 +40,7 @@ def process_vad(bytes_data, chunk_meta):
     return response.json()
 
 
-def process_asr(bytes_data, chunk_meta):
+async def process_asr(bytes_data, chunk_meta):
     bytes_data = convert_bytes_to_io(bytes_data, **chunk_meta)
     URL = RAY_PROXY_URL + "asr"
     data = {"data": base64.b64encode(bytes_data.read()).decode("utf-8")}

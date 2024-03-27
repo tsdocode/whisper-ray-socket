@@ -8,7 +8,7 @@ CHUNK = 2048  # Adjust chunk size if needed for better performance
 FORMAT = pyaudio.paInt16
 CHANNELS = 1
 RATE = 16000
-CHUNK_DURATION = 30  # Duration of each chunk in seconds
+CHUNK_DURATION = 3  # Duration of each chunk in seconds
 
 
 def transcribe_audio(audio_data):

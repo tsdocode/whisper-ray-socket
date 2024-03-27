@@ -12,7 +12,7 @@ from starlette.requests import Request
 class FasterWhisperServer:
     def __init__(self):
         # Load model
-        self.pipeline = WhisperModel("distil-large-v2", compute_type="int8")
+        self.pipeline = WhisperModel("distil-large-v2", device="auto")
 
     async def __call__(self, http_request: Request) -> str:
         data: str = await http_request.json()
