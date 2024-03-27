@@ -1,24 +1,26 @@
 import pyaudio
 import uuid
-from websockets.sync.client import connect
+import websockets
+import asyncio
 
-CHUNK = 2048  # Adjust chunk size if needed for better performance
+CHUNK = 1024  # Adjust chunk size if needed for better performance
 FORMAT = pyaudio.paInt16
 CHANNELS = 1
 RATE = 16000
-CHUNK_DURATION = 3  # Duration of each chunk in seconds
+CHUNK_DURATION = 2  # Duration of each chunk in seconds
+
+async def send_audio_data(client_id, audio_data):
+    async with websockets.connect(f"ws://192.168.1.8:8000/{client_id}") as websocket:
+        await websocket.send(audio_data)
+        received = await websocket.recv()
+        
+        if received:
+            print(received, end="", flush=True)
 
 
 def realtime_transcription():
     audio = pyaudio.PyAudio()
-    stream = audio.open(
-        format=FORMAT,
-        channels=CHANNELS,
-        rate=RATE,
-        input=True,
-        frames_per_buffer=CHUNK,
-    )
-    
+    stream = audio.open(format=FORMAT, channels=CHANNELS, rate=RATE, input=True, frames_per_buffer=CHUNK)
     client_id = str(uuid.uuid4())
 
     print("Real-time transcription started. Press Ctrl+C to stop.")
@@ -26,27 +28,21 @@ def realtime_transcription():
         while True:
             audio_data = b""
             for _ in range(int(RATE / CHUNK * CHUNK_DURATION)):
-                audio_data += stream.read(CHUNK, exception_on_overflow=False)
-            
-            with connect(f"ws://localhost:8000/{client_id}") as websocket:
-                # Send the audio data
-                # websocket.send(client_id)
-                websocket.send(audio_data)
-                
-                while True:
-                    received = websocket.recv()
-                    print(received, end="")
-                    print(" ")
+                try:
+                    data = stream.read(CHUNK, exception_on_overflow=False)
+                    audio_data += data
+                except Exception as e:
+                    print(f"Error reading audio stream: {e}")
                     break
+            
+            asyncio.run(send_audio_data(client_id, audio_data))
 
     except KeyboardInterrupt:
         print("Real-time transcription stopped.")
-
     finally:
         stream.stop_stream()
         stream.close()
         audio.terminate()
-
 
 if __name__ == "__main__":
     realtime_transcription()

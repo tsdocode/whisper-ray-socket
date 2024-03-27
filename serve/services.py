@@ -24,6 +24,12 @@ def convert_bytes_to_io(bytes_data, channels=1, sampwidth=2, framerate=48000):
         wav_file.setsampwidth(sampwidth)
         wav_file.setframerate(framerate)
         wav_file.writeframes(bytes_data)
+        
+    with wave.open("sample.wav", "wb") as wav_file:
+        wav_file.setnchannels(channels)
+        wav_file.setsampwidth(sampwidth)
+        wav_file.setframerate(44100)
+        wav_file.writeframes(bytes_data)      
 
     wav_buffer.seek(0)  # Rewind the buffer for reading
     return wav_buffer
