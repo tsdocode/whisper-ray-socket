@@ -3,7 +3,7 @@ import { MediaRecorder, register } from "extendable-media-recorder";
 import { connect } from "extendable-media-recorder-wav-encoder";
 
 const App = () => {
-  const [serverAddress, setServerAddress] = useState("ws://asr.tsdocode.online");
+  const [serverAddress, setServerAddress] = useState("wss://asr.tsdocode.online");
   const [isRecording, setIsRecording] = useState(false);
   // Use an array to hold individual transcription messages
   const [transcriptionMessages, setTranscriptionMessages] = useState([]);
