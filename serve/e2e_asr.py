@@ -39,7 +39,7 @@ class ASRServer:
                 data = await ws.receive_bytes()
                 
                 meta = dict(
-                    channels=1,
+                    channels=2,
                     sampwidth=2,
                     framerate=16000,
                 )
