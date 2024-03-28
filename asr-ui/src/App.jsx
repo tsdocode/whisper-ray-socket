@@ -106,7 +106,9 @@ const App = () => {
         width: "100vw",
       }}
     >
-      <h1>Whisper Realtime with Websocket</h1>
+      <h1 style={{
+      }}>Whisper Realtime with Websocket</h1>
+
       <div style={{
         display: "flex",
         flexDirection: "row",
@@ -120,11 +122,12 @@ const App = () => {
           placeholder="Enter Server Address"
           style={{
             height: "30px",
-            width: "400px",
+            width: "80%",
             textAlign: "center",
             padding: "10px",
             fontSize: "30px",
-            borderColor: "blue"
+            borderColor: "blue",
+            marginLeft: "10px"
           }}
         />
         <button onClick={isRecording ? stopRecording : startRecording} style={{
@@ -139,8 +142,8 @@ const App = () => {
         ref={transcriptionContainerRef}
         style={{
           marginTop: "20px",
-          width: "800px",
-          height: "500px",
+          width: "90%",
+          height: "45%",
           overflowY: "scroll",
           fontSize: "20px",
           padding: "10px",
