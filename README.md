@@ -4,10 +4,15 @@
 
 > Serving on my GTX 1050ti Laptop, Click on gif watch youtube video
 
+> [!IMPORTANT]
+> Demo is online at https://tsdocode.github.io/whisper-ray-socket/
 
 
 > [!IMPORTANT]
 > This repository is my practice on training and serving a realtime Automatic Speech Recognition (ASR) System.
+
+
+
 
 ##### Table of Contents  
 [1. Introduction](#1-introduction)  
