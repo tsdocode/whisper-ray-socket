@@ -106,23 +106,35 @@ const App = () => {
         width: "100vw",
       }}
     >
-      <h1>Audio Transcription</h1>
-      <input
-        type="text"
-        value={serverAddress}
-        onChange={(e) => setServerAddress(e.target.value)}
-        placeholder="Enter Server Address"
-        style={{
-          height: "50px",
-          width: "400px",
-          textAlign: "center",
+      <h1>Whisper Realtime with Websocket</h1>
+      <div style={{
+        display: "flex",
+        flexDirection: "row",
+        justifyContent: "center",
+        alignItems: "center"
+      }}>
+        <input
+          type="text"
+          value={serverAddress}
+          onChange={(e) => setServerAddress(e.target.value)}
+          placeholder="Enter Server Address"
+          style={{
+            height: "30px",
+            width: "400px",
+            textAlign: "center",
+            padding: "10px",
+            fontSize: "30px",
+            borderColor: "blue"
+          }}
+        />
+        <button onClick={isRecording ? stopRecording : startRecording} style={{
+          height: "60px",
           padding: "10px",
-          fontSize: "30px",
-        }}
-      />
-      <button onClick={isRecording ? stopRecording : startRecording}>
-        {isRecording ? "Stop" : "Start"} Recording
-      </button>
+        }}>
+          {isRecording ? "Stop" : "Start"} Recording
+        </button>
+      </div>
+
       <div
         ref={transcriptionContainerRef}
         style={{
