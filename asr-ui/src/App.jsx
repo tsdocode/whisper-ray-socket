@@ -3,12 +3,16 @@ import { MediaRecorder, register } from "extendable-media-recorder";
 import { connect } from "extendable-media-recorder-wav-encoder";
 
 const App = () => {
-  const [serverAddress, setServerAddress] = useState("wss://asr.tsdocode.online");
+  const [serverAddress, setServerAddress] = useState(
+    "wss://asr.tsdocode.online"
+  );
   const [isRecording, setIsRecording] = useState(false);
   // Use an array to hold individual transcription messages
   const [transcriptionMessages, setTranscriptionMessages] = useState([]);
   const mediaRecorderRef = useRef(null);
   const websocketRef = useRef(null);
+  const [channels, setChannels] = useState(2);
+
   const transcriptionContainerRef = useRef(null);
 
   useEffect(() => {
@@ -57,7 +61,25 @@ const App = () => {
           websocketRef.current.readyState === WebSocket.OPEN
         ) {
           const arrayBuffer = await event.data.arrayBuffer();
+
+
+          try {
+            const wavBuffer = await audioContext.decodeAudioData(arrayBuffer.slice(0));
+            setChannels(wavBuffer.numberOfChannels)
+          } catch { /* empty */ }
+
+
+          const metadata = { 
+            "samplewidth": 2,
+            "framerate": 16000,
+            "channels": channels
+           };
+
+          websocketRef.current.send(JSON.stringify(metadata));
           websocketRef.current.send(arrayBuffer);
+
+
+
           websocketRef.current.onmessage = (message) => {
             if (message.data !== " ") {
               setTranscriptionMessages((prevMessages) => [
@@ -106,15 +128,16 @@ const App = () => {
         width: "100vw",
       }}
     >
-      <h1 style={{
-      }}>Whisper Realtime with Websocket</h1>
+      <h1 style={{}}>Whisper Realtime with Websocket</h1>
 
-      <div style={{
-        display: "flex",
-        flexDirection: "row",
-        justifyContent: "center",
-        alignItems: "center"
-      }}>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
         <input
           type="text"
           value={serverAddress}
@@ -127,13 +150,16 @@ const App = () => {
             padding: "10px",
             fontSize: "30px",
             borderColor: "blue",
-            marginLeft: "10px"
+            marginLeft: "10px",
           }}
         />
-        <button onClick={isRecording ? stopRecording : startRecording} style={{
-          height: "60px",
-          padding: "10px",
-        }}>
+        <button
+          onClick={isRecording ? stopRecording : startRecording}
+          style={{
+            height: "60px",
+            padding: "10px",
+          }}
+        >
           {isRecording ? "Stop" : "Start"} Recording
         </button>
       </div>

@@ -12,6 +12,7 @@
   "dependencies": {
     "extendable-media-recorder": "^9.1.12",
     "extendable-media-recorder-wav-encoder": "^7.0.107",
+    "node-wav": "^0.0.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-mic": "^12.4.6"
