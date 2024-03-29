@@ -65,6 +65,9 @@ const App = () => {
 
           try {
             const wavBuffer = await audioContext.decodeAudioData(arrayBuffer.slice(0));
+            console.log(wavBuffer);
+            console.log(wavBuffer.numberOfChannels);
+
             setChannels(wavBuffer.numberOfChannels)
           } catch { /* empty */ }
 
