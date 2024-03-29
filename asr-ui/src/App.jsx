@@ -11,7 +11,7 @@ const App = () => {
   const [transcriptionMessages, setTranscriptionMessages] = useState([]);
   const mediaRecorderRef = useRef(null);
   const websocketRef = useRef(null);
-  const [channels, setChannels] = useState(2);
+  const [channels, setChannels] = useState(1);
 
   const transcriptionContainerRef = useRef(null);
 
@@ -62,26 +62,33 @@ const App = () => {
         ) {
           const arrayBuffer = await event.data.arrayBuffer();
 
+          let metaChannels;
 
-          try {
-            const wavBuffer = await audioContext.decodeAudioData(arrayBuffer.slice(0));
-            console.log(wavBuffer);
-            console.log(wavBuffer.numberOfChannels);
+          if (
+            arrayBuffer.byteLength % 16000 == 0 ||
+            arrayBuffer.byteLength - (44 % 16000) == 0
+          ) {
+            const apxChannels = arrayBuffer.byteLength / 2 / 16000 / 1;
+            console.log(apxChannels);
 
-            setChannels(wavBuffer.numberOfChannels)
-          } catch { /* empty */ }
 
+            setChannels(() => Math.floor(apxChannels));
 
-          const metadata = { 
-            "samplewidth": 2,
-            "framerate": 16000,
-            "channels": channels
-           };
+            metaChannels = apxChannels;
+          } else {
+            metaChannels = channels;
+          }
+
+          console.log(metaChannels);
+
+          const metadata = {
+            samplewidth: 2,
+            framerate: 16000,
+            channels: metaChannels,
+          };
 
           websocketRef.current.send(JSON.stringify(metadata));
           websocketRef.current.send(arrayBuffer);
-
-
 
           websocketRef.current.onmessage = (message) => {
             if (message.data !== " ") {
