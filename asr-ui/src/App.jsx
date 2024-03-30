@@ -11,6 +11,8 @@ const App = () => {
   const [transcriptionMessages, setTranscriptionMessages] = useState([]);
   const mediaRecorderRef = useRef(null);
   const websocketRef = useRef(null);
+  const streamRef = useRef(null);
+  const audioRef = useRef(null);
   const [channels, setChannels] = useState(1);
 
   const transcriptionContainerRef = useRef(null);
@@ -41,6 +43,7 @@ const App = () => {
       const audioContext = new AudioContext({ sampleRate: 16000 });
       const sourceNode = audioContext.createMediaStreamSource(stream);
       const destinationNode = audioContext.createMediaStreamDestination();
+
       sourceNode.connect(destinationNode);
 
       const mediaRecorder = new MediaRecorder(destinationNode.stream, {
@@ -48,6 +51,8 @@ const App = () => {
       });
 
       mediaRecorderRef.current = mediaRecorder;
+      streamRef.current = stream;
+      audioRef.current = audioContext;
 
       mediaRecorder.onstart = () => {
         websocketRef.current = new WebSocket(`${serverAddress}/${uuidv4()}`);
@@ -71,15 +76,12 @@ const App = () => {
             const apxChannels = arrayBuffer.byteLength / 2 / 16000 / 1;
             console.log(apxChannels);
 
-
             setChannels(() => Math.floor(apxChannels));
 
             metaChannels = apxChannels;
           } else {
             metaChannels = channels;
           }
-
-          console.log(metaChannels);
 
           const metadata = {
             samplewidth: 2,
@@ -115,6 +117,26 @@ const App = () => {
   const stopRecording = () => {
     if (mediaRecorderRef.current) {
       mediaRecorderRef.current.stop();
+
+      // Stop all tracks on the stream
+      const stream = streamRef.current;
+      if (stream && stream.getTracks) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+
+      // Close the AudioContext
+      const audioContext = audioRef.current;
+      if (audioContext && audioContext.state !== 'closed') {
+        audioContext.close().then(() => {
+          console.log('AudioContext closed');
+        });
+      }
+
+      // Close WebSocket connection if open
+      if (websocketRef.current && websocketRef.current.readyState === WebSocket.OPEN) {
+        websocketRef.current.close();
+      }
+
       setIsRecording(false);
     }
   };
